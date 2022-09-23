@@ -5,10 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Note extends Model
+class Tweet extends Model
 {
     use HasFactory;
-    protected $table = 'notes';
-
-    protected $fillable = ['name', 'content'];
+    protected $tweet = 'tweets';
 }
