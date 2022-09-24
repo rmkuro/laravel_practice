@@ -10,16 +10,42 @@ use App\Models\User;
 class ApiController extends Controller
 {
     public function createUser(Request $request){
-        $user = new User;
-        $user->name = $request->name;
-        $user->password = $request->password;
-        $user->save();
+        //$user = new User;
+        $input = json_decode($request->getContent(), true);
 
-        //return response()->json(
-            //{
-                #ユーザー登録の処理を書く。
-            //};
-        //)
+        //$inputにusername,passwordのキーが存在し、かつ$inputがfalseでない(Json形式の入力である)ことを保証している
+        
+        if(!($input && array_key_exists('username', $input) && array_key_exists('password', $input))){
+            return response('{"username" : "xx" , "password" : "xx"}の形式にしてください。', 400);
+        }
+
+        $input_name = $input['username'];
+        $user = User::where('name' , $input_name)->first();
+        
+        //$userがNULLでない=入力されたユーザー名と同じデータが存在する
+        if(isset($user)){
+            $conflict_id = $user->value('id');
+            return response("ユーザー名は既に使われています", 409)
+                    ->header('Location', "http://localhost/users/{$conflict_id}");
+        }
+
+        //ユーザーネームが15文字以上の場合、不適
+        if(!preg_match('/^[a-z0-9_]{1,15}$/i', $input_name)){
+            return response("ユーザーネームは英数字、_(アンダーバー)のみの15文字以内にしてください。", 400);
+        }
+
+        //パスワードを5文字以上、30文字以内に収まっていない場合、不適
+        if(!preg_match('/^[a-z0-9_]{5,30}$/i', $input['password'])){
+            return response("パスワードは英数字、_(アンダーバー)のみ、5文字以上、30文字以内にしてください。", 400);
+        }
+        
+        $new_user = new User;
+        $new_user->name = $input_name;
+        $new_user->password = $input['password'];
+        $new_user->save();
+
+        return response("Created", 201)
+                ->header('Location', "http://localhost/users/{$new_user->id}");
     }
 
     public function getAllTweets(Request $request){
@@ -54,7 +80,8 @@ class ApiController extends Controller
         $tweet->user_id = $user['id'];
         $tweet->content = $tweet_content;
         $tweet->save();
-        return response("Created", 201);
+        return response("Created", 201)
+                ->header('Location', "http://localhost/tweets/{$tweet->id}");
     }
 
     public function basicAuthentication(Request $request){
