@@ -50,6 +50,9 @@ class ApiController extends Controller
 
     public function showUser(Request $request, $id){
         $user = User::where('id' , $id)->first();
+        if(is_null($user)){
+            return response("該当するユーザーが見つかりません", 404);
+        }
         $user = json_decode($user, true);
         return response($user, 200);
     }
@@ -122,15 +125,20 @@ class ApiController extends Controller
     public function deleteTweet(Request $request, $id){
         //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
         $authentication_result = $this->basicAuthentication($request);
-        return $authentication_result;
 
-        //多分ここも機能してない
-        if(is_a($authentication_result, 'Response')){            
-            return $authentication_result;
+        //$result = is_a($authentication_result, 'Response');
+        $result = get_class($authentication_result);
+        return response(var_dump($result), 200);
+
+        //なぜかここが機能していない
+        if($authentication_result instanceof Response){            
+            //return $authentication_result;
+            return response("アイウエオ", 400);
         }
         
         //分かりやすく、$userという変数に移行
         $user = $authentication_result;
+        return response($user, 400);
 
         $tweet = Tweet::where('id', $id)->first();
         if($tweet->user_id != $user->id){
@@ -138,6 +146,15 @@ class ApiController extends Controller
         }
 
         return response($tweet->user_id, 200);
+    }
+
+    public function showTweet(Request $request, $id){
+        $tweet = Tweet::where('id' , $id)->first();
+        if(is_null($tweet)){
+            return response("Tweetが見つかりません", 404);
+        }
+        $tweet = json_decode($tweet, true);
+        return response($tweet, 200);
     }
 
     public function basicAuthentication(Request $request){
