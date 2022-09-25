@@ -54,22 +54,68 @@ class ApiController extends Controller
         return response($user, 200);
     }
 
+    public function updateUser(Request $request){
+        //basicAuthentication関数は、認証に問題があればResopnseクラス、問題なければログイン対象のUserクラスのオブジェクトを返す
+        $authentication_result = $this->basicAuthentication($request);
+
+        //もしもレスポンスクラスのオブジェクトだったらエラーが発生している。
+        if(is_a($authentication_result, 'Response')){            
+            return $authentication_result;
+        }
+        
+        //分かりやすく、$userに格納
+        $user = $authentication_result;
+
+        //入力情報がJSON形式、かつusername,passwordというキーを持つことを保証している
+        $input = json_decode($request->getContent(), true);
+        if(!($input && array_key_exists('username', $input) && array_key_exists('password', $input))){
+            return response('{"username" : "xx" , "password" : "xx"}の形式にしてください。', 400);
+        }
+
+        $input_name = $input['username'];
+
+        //$userは既に使っているので、ここでは$search_userとする。
+        $search_user = User::where('name' , $input_name)->first();
+        
+        //$userがNULLでない=入力されたユーザー名と同じデータが存在する
+        if(isset($search_user)){
+            $conflict_id = $user->value('id');
+            return response("ユーザー名は既に使われています", 409)
+                    ->header('Location', "http://localhost/users/{$conflict_id}");
+        }
+
+        //ユーザーネームが15文字以上の場合、不適
+        if(!preg_match('/^[a-z0-9_]{1,15}$/i', $input_name)){
+            return response("ユーザーネームは英数字、_(アンダーバー)のみの15文字以内にしてください。", 400);
+        }
+
+        //パスワードを5文字以上、30文字以内に収まっていない場合、不適
+        if(!preg_match('/^[a-z0-9_]{5,30}$/i', $input['password'])){
+            return response("パスワードは英数字、_(アンダーバー)のみ、5文字以上、30文字以内にしてください。", 400);
+        }
+
+        $user->name = $input["username"];
+        $user->password = $input["password"];
+        $user->save();
+
+        return response(json_encode($user), 200);
+    }
+
     public function getAllTweets(Request $request){
         $tweets = Tweet::get()->toJson(JSON_PRETTY_PRINT);
         return response($tweets, 200);
     }
 
     public function createTweet(Request $request){
-        //認証した後、responseオブジェクトが返ってくる。成功した場合、Modelクラス(User)のオブジェクトが、Responseオブジェクトに入っている。
+        //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
         $authentication_result = $this->basicAuthentication($request);
 
-        //条件式を、!$authentication_result->status() == 200だと意図した通りに動かない理由が不明
-        if(!($authentication_result->status() == 200)){            
+        if(is_a($authentication_result, 'Response')){            
             return $authentication_result;
         }
         
-        //レスポンスオブジェクトのコンテンツの中にあるjson文字列を配列に変換
-        $user = json_decode($authentication_result->content(), true);
+        //分かりやすく、$userという変数に移行
+        $user = $authentication_result;
 
         //ツイートの処理
         $input_content = json_decode($request->getContent(), true);
@@ -83,7 +129,7 @@ class ApiController extends Controller
         }
 
         $tweet = new Tweet;
-        $tweet->user_id = $user['id'];
+        $tweet->user_id = $user->id;
         $tweet->content = $tweet_content;
         $tweet->save();
         return response("Created", 201)
@@ -115,7 +161,8 @@ class ApiController extends Controller
             return response('パスワードが違います', 401);
         }
 
-        return response($user, 200);
+        //認証に何も問題がなければ、Userクラスのオブジェクトを返す
+        return $user;
     }
 }
 
