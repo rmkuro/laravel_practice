@@ -26,3 +26,6 @@ Route::get('tweets', [ApiController::class, 'getAllTweets']);
 Route::post('tweets',[ApiController::class, 'createTweet']);
 Route::delete('tweets/{id}',[ApiController::class, 'deleteTweet']);
 Route::get('tweets/{id}',[ApiController::class, 'showTweet']);
+
+Route::post('test/input', [ApiController::class, 'check_input']);
+Route::get('test/auth', [ApiController::class, 'basicAuthentication']);

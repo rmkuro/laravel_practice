@@ -69,11 +69,11 @@ class ApiController extends Controller
         //check_inputinfo()で、入力された情報が新規登録可能な情報かどうかを検証している。
         //エラーだったらresponseオブジェクト、OKだったらインプット内容がArrayオブジェクトとして返ってくる
         $check = $this->check_input($request);
-        //return response(get_class($check), 200);
+        return response(get_class($check), 200);
 
         //なぜかここが動かない。上のコメントアウトのコードを実行しても、Resposeクラスのオブジェクトではある。
         //instanceof でも is_aでも同様。
-        if(is_a($check, 'Response')){
+        if($check instanceof Response){
             return $check;
         }
 
@@ -119,6 +119,27 @@ class ApiController extends Controller
                 ->header('Location', "http://localhost/tweets/{$tweet->id}");
     }
 
+    public function deleteTweet(Request $request, $id){
+        //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
+        $authentication_result = $this->basicAuthentication($request);
+        return $authentication_result;
+
+        //多分ここも機能してない
+        if(is_a($authentication_result, 'Response')){            
+            return $authentication_result;
+        }
+        
+        //分かりやすく、$userという変数に移行
+        $user = $authentication_result;
+
+        $tweet = Tweet::where('id', $id)->first();
+        if($tweet->user_id != $user->id){
+            return response("他人のツイートです。", 401);
+        }
+
+        return response($tweet->user_id, 200);
+    }
+
     public function basicAuthentication(Request $request){
         $auth_header = $request->headers->get('Authorization'); //Base64エンコードされたヘッダ情報を取得
         $access_token = base64_decode(substr($auth_header, 6), true); //ヘッダからID:PWの形にbase64デコード
@@ -136,8 +157,9 @@ class ApiController extends Controller
         }
         
         //データベースからユーザーネーム・パスワードを取得
-        $user_name = $user->value('name');
-        $user_pass = $user->value('password');
+        //->name　と ->value('name')の違いがわからない。
+        $user_name = $user->name;
+        $user_pass = $user->password;
         
         //ここも!の後ろの()がないと挙動がおかしい(ここは条件式が複雑だから、いずれにせよ付けた方がいいとは思うけど)
         if(!('Basic ' . base64_encode($user_name . ':' . $user_pass) == $auth_header)){
@@ -161,7 +183,7 @@ class ApiController extends Controller
         
         //$userがNULLでない=入力されたユーザー名と同じデータが存在する
         if(isset($search_user)){
-            $conflict_id = $user->value('id');
+            $conflict_id = $search_user->value('id');
             return response("ユーザー名は既に使われています", 409)
                     ->header('Location', "http://localhost/users/{$conflict_id}");
         }
