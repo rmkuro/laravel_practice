@@ -48,6 +48,12 @@ class ApiController extends Controller
                 ->header('Location', "http://localhost/users/{$new_user->id}");
     }
 
+    public function showUser(Request $request, $id){
+        $user = User::where('id' , $id)->first();
+        $user = json_decode($user, true);
+        return response($user, 200);
+    }
+
     public function getAllTweets(Request $request){
         $tweets = Tweet::get()->toJson(JSON_PRETTY_PRINT);
         return response($tweets, 200);
@@ -112,3 +118,4 @@ class ApiController extends Controller
         return response($user, 200);
     }
 }
+
