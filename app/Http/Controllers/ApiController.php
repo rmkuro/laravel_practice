@@ -60,42 +60,25 @@ class ApiController extends Controller
 
         //もしもレスポンスクラスのオブジェクトだったらエラーが発生している。
         if(is_a($authentication_result, 'Response')){            
-            return $authentication_result;
+            return $authentication_result;            
         }
         
         //分かりやすく、$userに格納
         $user = $authentication_result;
 
-        //入力情報がJSON形式、かつusername,passwordというキーを持つことを保証している
-        $input = json_decode($request->getContent(), true);
-        if(!($input && array_key_exists('username', $input) && array_key_exists('password', $input))){
-            return response('{"username" : "xx" , "password" : "xx"}の形式にしてください。', 400);
+        //check_inputinfo()で、入力された情報が新規登録可能な情報かどうかを検証している。
+        //エラーだったらresponseオブジェクト、OKだったらインプット内容がArrayオブジェクトとして返ってくる
+        $check = $this->check_input($request);
+        //return response(get_class($check), 200);
+
+        //なぜかここが動かない。上のコメントアウトのコードを実行しても、Resposeクラスのオブジェクトではある。
+        //instanceof でも is_aでも同様。
+        if(is_a($check, 'Response')){
+            return $check;
         }
 
-        $input_name = $input['username'];
-
-        //$userは既に使っているので、ここでは$search_userとする。
-        $search_user = User::where('name' , $input_name)->first();
-        
-        //$userがNULLでない=入力されたユーザー名と同じデータが存在する
-        if(isset($search_user)){
-            $conflict_id = $user->value('id');
-            return response("ユーザー名は既に使われています", 409)
-                    ->header('Location', "http://localhost/users/{$conflict_id}");
-        }
-
-        //ユーザーネームが15文字以上の場合、不適
-        if(!preg_match('/^[a-z0-9_]{1,15}$/i', $input_name)){
-            return response("ユーザーネームは英数字、_(アンダーバー)のみの15文字以内にしてください。", 400);
-        }
-
-        //パスワードを5文字以上、30文字以内に収まっていない場合、不適
-        if(!preg_match('/^[a-z0-9_]{5,30}$/i', $input['password'])){
-            return response("パスワードは英数字、_(アンダーバー)のみ、5文字以上、30文字以内にしてください。", 400);
-        }
-
-        $user->name = $input["username"];
-        $user->password = $input["password"];
+        $user->name = $check["username"];
+        $user->password = $check["password"];
         $user->save();
 
         return response(json_encode($user), 200);
@@ -163,6 +146,37 @@ class ApiController extends Controller
 
         //認証に何も問題がなければ、Userクラスのオブジェクトを返す
         return $user;
+    }
+
+    public function check_input(Request $request){
+        $input = json_decode($request->getContent(), true);
+        if(!($input && array_key_exists('username', $input) && array_key_exists('password', $input))){
+            return response('{"username" : "xx" , "password" : "xx"}の形式にしてください。', 400);
+        }
+
+        $input_name = $input['username'];
+
+        //$userは既に使っているので、ここでは$search_userとする。
+        $search_user = User::where('name' , $input_name)->first();
+        
+        //$userがNULLでない=入力されたユーザー名と同じデータが存在する
+        if(isset($search_user)){
+            $conflict_id = $user->value('id');
+            return response("ユーザー名は既に使われています", 409)
+                    ->header('Location', "http://localhost/users/{$conflict_id}");
+        }
+
+        //ユーザーネームが15文字以上の場合、不適
+        if(!preg_match('/^[a-z0-9_]{1,15}$/i', $input_name)){
+            return response("ユーザーネームは英数字、_(アンダーバー)のみの15文字以内にしてください。", 400);
+        }
+
+        //パスワードを5文字以上、30文字以内に収まっていない場合、不適
+        if(!preg_match('/^[a-z0-9_]{5,30}$/i', $input['password'])){
+            return response("パスワードは英数字、_(アンダーバー)のみ、5文字以上、30文字以内にしてください。", 400);
+        }
+
+        return $input;
     }
 }
 
