@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 use App\Models\Tweet;
 use App\Models\User;
@@ -62,8 +63,8 @@ class ApiController extends Controller
         $authentication_result = $this->basicAuthentication($request);
 
         //もしもレスポンスクラスのオブジェクトだったらエラーが発生している。
-        if(is_a($authentication_result, 'Response')){            
-            return $authentication_result;            
+        if($authentication_result instanceof Response){
+            return $authentication_result;
         }
         
         //分かりやすく、$userに格納
@@ -72,7 +73,6 @@ class ApiController extends Controller
         //check_inputinfo()で、入力された情報が新規登録可能な情報かどうかを検証している。
         //エラーだったらresponseオブジェクト、OKだったらインプット内容がArrayオブジェクトとして返ってくる
         $check = $this->check_input($request);
-        return response(get_class($check), 200);
 
         //なぜかここが動かない。上のコメントアウトのコードを実行しても、Resposeクラスのオブジェクトではある。
         //instanceof でも is_aでも同様。
@@ -96,7 +96,7 @@ class ApiController extends Controller
         //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
         $authentication_result = $this->basicAuthentication($request);
 
-        if(is_a($authentication_result, 'Response')){            
+        if($authentication_result instanceof Response){            
             return $authentication_result;
         }
         
@@ -126,26 +126,21 @@ class ApiController extends Controller
         //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
         $authentication_result = $this->basicAuthentication($request);
 
-        //$result = is_a($authentication_result, 'Response');
-        $result = get_class($authentication_result);
-        return response(var_dump($result), 200);
-
-        //なぜかここが機能していない
         if($authentication_result instanceof Response){            
             //return $authentication_result;
-            return response("アイウエオ", 400);
+            return $authentication_result;
         }
         
         //分かりやすく、$userという変数に移行
         $user = $authentication_result;
-        return response($user, 400);
 
         $tweet = Tweet::where('id', $id)->first();
-        if($tweet->user_id != $user->id){
+        if($tweet->user_id == $user->id){
+            $tweet->delete();
+            return response("該当のツイートは削除されました。", 200);
+        }else{
             return response("他人のツイートです。", 401);
         }
-
-        return response($tweet->user_id, 200);
     }
 
     public function showTweet(Request $request, $id){
@@ -218,4 +213,3 @@ class ApiController extends Controller
         return $input;
     }
 }
-
