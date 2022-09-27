@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-
 use App\Models\Tweet;
 use App\Models\User;
+use App\Http\Requests\UserRequest;
 
 class ApiUserController extends Controller
 {
-    public function createUser(Request $request){
+    public function createUser(UserRequest $request){
         $input = $request->validate([
             'username' => 'required|unique:users,name|regex:/^[a-z0-9_]{1,15}$/i',
             'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
@@ -60,35 +60,5 @@ class ApiUserController extends Controller
         $user->save();
 
         return response(json_encode($user), 200);
-    }
-
-    public static function basicAuthentication(Request $request){
-        $auth_header = $request->headers->get('Authorization'); //Base64エンコードされたヘッダ情報を取得
-        $access_token = base64_decode(substr($auth_header, 6), true); //ヘッダからID:PWの形にbase64デコード
-        
-        if(!$access_token){
-            return response('base64エンコードされた文字列を送信してください。', 400);
-        }
-
-        $input_name = substr($access_token, 0, strpos($access_token, ':')); //ユーザーネームを取得
-
-        $user = User::where('name' , $input_name)->first(); //入力されたユーザー情報に該当するデータをUserモデルを介して取り出す
-        if (is_null($user)){
-            //$userがNULLの時点で、ユーザーネームが間違っている。
-            return response('正しいユーザーネームを入力してください', 400);
-        }
-        
-        //データベースからユーザーネーム・パスワードを取得
-        //->name　と ->value('name')の違いがわからない。
-        $user_name = $user->name;
-        $user_pass = $user->password;
-        
-        //ここも!の後ろの()がないと挙動がおかしい(ここは条件式が複雑だから、いずれにせよ付けた方がいいとは思うけど)
-        if(!('Basic ' . base64_encode($user_name . ':' . $user_pass) == $auth_header)){
-            return response('パスワードが違います', 401);
-        }
-
-        //認証に何も問題がなければ、Userクラスのオブジェクトを返す
-        return $user;
     }
 }
