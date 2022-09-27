@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-//下の行の、App\Http\Controllers\ApiControllerを変更(\Controllerを修正)
+use App\Http\Controllers\ApiUserController;
 use App\Http\Controllers\ApiTweetController;
 
 /*
@@ -20,9 +20,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('users', [ApiController::class, 'createUser']);
-Route::get('users/{id}', [ApiController::class, 'showUser']);
-Route::put('users/me', [ApiController::class, 'updateUser']);
+Route::post('users', [ApiUserController::class, 'createUser']);
+Route::get('users/{id}', [ApiUserController::class, 'showUser']);
+Route::put('users/me', [ApiUserController::class, 'updateUser']);
 Route::get('tweets', [ApiTweetController::class, 'getAllTweets']);
 Route::post('tweets',[ApiTweetController::class, 'createTweet']);
 Route::delete('tweets/{id}',[ApiTweetController::class, 'deleteTweet']);

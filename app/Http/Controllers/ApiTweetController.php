@@ -7,6 +7,7 @@ use Illuminate\Http\Response;
 
 use App\Models\Tweet;
 use App\Models\User;
+use App\Http\Controllers\ApiUserController;
 
 class ApiTweetController extends Controller
 {
@@ -17,7 +18,7 @@ class ApiTweetController extends Controller
 
     public function createTweet(Request $request){
         //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
-        $authentication_result = $this->basicAuthentication($request);
+        $authentication_result = ApiUserController::basicAuthentication($request);
 
         if($authentication_result instanceof Response){            
             return $authentication_result;
@@ -47,7 +48,7 @@ class ApiTweetController extends Controller
 
     public function deleteTweet(Request $request, $id){
         //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
-        $authentication_result = $this->basicAuthentication($request);
+        $authentication_result = ApiUserController::basicAuthentication($request);
 
         if($authentication_result instanceof Response){            
             //return $authentication_result;

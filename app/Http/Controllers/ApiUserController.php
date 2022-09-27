@@ -8,7 +8,7 @@ use Illuminate\Http\Response;
 use App\Models\Tweet;
 use App\Models\User;
 
-class ApiController extends Controller
+class ApiUserController extends Controller
 {
     public function createUser(Request $request){
         //$user = new User;
@@ -86,7 +86,7 @@ class ApiController extends Controller
         return response(json_encode($user), 200);
     }
 
-    public function basicAuthentication(Request $request){
+    public static function basicAuthentication(Request $request){
         $auth_header = $request->headers->get('Authorization'); //Base64エンコードされたヘッダ情報を取得
         $access_token = base64_decode(substr($auth_header, 6), true); //ヘッダからID:PWの形にbase64デコード
         
@@ -116,7 +116,7 @@ class ApiController extends Controller
         return $user;
     }
 
-    public function check_input(Request $request){
+    public static function check_input(Request $request){
         $input = json_decode($request->getContent(), true);
         if(!($input && array_key_exists('username', $input) && array_key_exists('password', $input))){
             return response('{"username" : "xx" , "password" : "xx"}の形式にしてください。', 400);
