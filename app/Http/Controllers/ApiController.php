@@ -26,8 +26,7 @@ class ApiController extends Controller
         //$userがNULLでない=入力されたユーザー名と同じデータが存在する
         if(isset($user)){
             $conflict_id = $user->value('id');
-            return response("ユーザー名は既に使われています", 409)
-                    ->header('Location', "http://localhost/users/{$conflict_id}");
+            return response("ユーザー名は既に使われています", 409);
         }
 
         //ユーザーネームが15文字以上の場合、不適
