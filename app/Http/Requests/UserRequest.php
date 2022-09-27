@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\User;
 
 class UserRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class UserRequest extends FormRequest
      */
     public function authorize()
     {
-        if($this->path() == '/api/users'){
+        if($this->path() == 'api/users'){
             return true;
         }
 
@@ -33,7 +34,6 @@ class UserRequest extends FormRequest
         }
         
         //データベースからユーザーネーム・パスワードを取得
-        //->name　と ->value('name')の違いがわからない。
         $user_name = $user->name;
         $user_pass = $user->password;
         

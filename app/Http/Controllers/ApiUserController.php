@@ -11,10 +11,7 @@ use App\Http\Requests\UserRequest;
 class ApiUserController extends Controller
 {
     public function createUser(UserRequest $request){
-        $input = $request->validate([
-            'username' => 'required|unique:users,name|regex:/^[a-z0-9_]{1,15}$/i',
-            'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
-        ]);
+        $input = $request->validate();
 
         $input_name = $input['username'];
         $user = User::where('name' , $input_name)->first();
