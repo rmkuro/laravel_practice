@@ -4,24 +4,39 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-
 use App\Models\Tweet;
 use App\Models\User;
+use App\Http\Requests\UserRequest;
 
 class ApiUserController extends Controller
 {
-    public function createUser(Request $request){
-        $input = $request->validate([
-            'username' => 'required|unique:users,name|regex:/^[a-z0-9_]{1,15}$/i',
-            'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
-        ]);
+    public function login(UserRequest $request){
+        $input = $request->validated();
+        $input_name = $input['username'];
+        $input_pass = $input['password'];
+        $input_pass = md5($input_pass); //入力されたパスワードのハッシュ化
+        $user = User::where('username' , $input_name)->first();
+        //$userがnull = 存在しないユーザーネームが入力されている。
+        if(!$user){
+            return response("ログイン失敗です", 401);
+        }
+        if($user->password == $input_pass){
+            $token = $user->createToken('test');
+            return response($token);
+        }
+        return response("ログイン失敗です", 401);
+    }
+
+    public function createUser(UserRequest $request){
+        $input = $request->validated();
 
         $input_name = $input['username'];
-        $user = User::where('name' , $input_name)->first();
+        $input_pass = $input['password'];
         
         $new_user = new User;
-        $new_user->name = $input_name;
-        $new_user->password = $input['password'];
+        $new_user->username = $input_name;
+
+        $new_user->password = md5($input_pass); 
         $new_user->save();
         return response("Created", 201)
                 ->header('Location', $_ENV['APP_URL'] . "/tweets/{$new_user->id}");
@@ -36,58 +51,21 @@ class ApiUserController extends Controller
         return response($user, 200);
     }
 
-    public function updateUser(Request $request){
-        //basicAuthentication関数は、認証に問題があればResopnseクラス、問題なければログイン対象のUserクラスのオブジェクトを返す
-        $authentication_result = $this->basicAuthentication($request);
+    public function updateUser(UserRequest $request){
+        $input = $request->validated();
 
-        //もしもレスポンスクラスのオブジェクトだったらエラーが発生している。
-        if($authentication_result instanceof Response){
-            return $authentication_result;
-        }
-        
-        //分かりやすく、$userに格納
-        $user = $authentication_result;
+        $input_token = $request->header('AccessToken');
+        //送られてきたトークンに該当するユーザーのIDを取得。(フォームリクエストで既に認証されてるのでNULLにはならない。)
+        $db_token = \DB::table('personal_access_tokens')
+                    ->where('token', "$input_token")
+                    ->value('tokenable_id');
 
-        //入力内容(ID,PW)に問題がないか検証
-        $input = $request->validate([
-            'username' => 'required|unique:users,name|regex:/^[a-z0-9_]{1,15}$/i',
-            'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
-        ]);
+        $user = User::where('id', $db_token)->first();
 
-        $user->name = $input["username"];
-        $user->password = $input["password"];
+        $user->username = $input["username"];
+        $user->password = md5($input['password']);
         $user->save();
 
         return response(json_encode($user), 200);
-    }
-
-    public static function basicAuthentication(Request $request){
-        $auth_header = $request->headers->get('Authorization'); //Base64エンコードされたヘッダ情報を取得
-        $access_token = base64_decode(substr($auth_header, 6), true); //ヘッダからID:PWの形にbase64デコード
-        
-        if(!$access_token){
-            return response('base64エンコードされた文字列を送信してください。', 400);
-        }
-
-        $input_name = substr($access_token, 0, strpos($access_token, ':')); //ユーザーネームを取得
-
-        $user = User::where('name' , $input_name)->first(); //入力されたユーザー情報に該当するデータをUserモデルを介して取り出す
-        if (is_null($user)){
-            //$userがNULLの時点で、ユーザーネームが間違っている。
-            return response('正しいユーザーネームを入力してください', 400);
-        }
-        
-        //データベースからユーザーネーム・パスワードを取得
-        //->name　と ->value('name')の違いがわからない。
-        $user_name = $user->name;
-        $user_pass = $user->password;
-        
-        //ここも!の後ろの()がないと挙動がおかしい(ここは条件式が複雑だから、いずれにせよ付けた方がいいとは思うけど)
-        if(!('Basic ' . base64_encode($user_name . ':' . $user_pass) == $auth_header)){
-            return response('パスワードが違います', 401);
-        }
-
-        //認証に何も問題がなければ、Userクラスのオブジェクトを返す
-        return $user;
     }
 }
