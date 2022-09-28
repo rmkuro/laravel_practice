@@ -14,36 +14,26 @@ class UserRequest extends FormRequest
      */
     public function authorize()
     {
-        if($this->path() == 'api/users'){
+        //ログイン時と登録時には、認証を行わない
+        if($this->path() == 'api/login' || $this->path() == 'api/users'){
             return true;
         }
 
-        $auth_header = $this->headers->get('Authorization'); //Base64エンコードされたヘッダ情報を取得
-        $access_token = base64_decode(substr($auth_header, 6), true); //ヘッダからID:PWの形にbase64デコード
-        
-        if(!$access_token){
+        //AccessTokenが送信されていれば、それを検証
+        if($this->hasHeader('AccessToken')){
+            $input_token = $this->header('AccessToken'); 
+            //ヘッダに書かれたアクセストークンがあるかどうかの検証
+            $db_token = \DB::table('personal_access_tokens')
+                        ->where('token', "$input_token")
+                        ->value('token');
+            if($db_token){
+                return true;
+            }else{
+                return false;
+            }
+        }else{
             return false;
         }
-
-        $input_name = substr($access_token, 0, strpos($access_token, ':')); //ユーザーネームを取得
-
-        $user = User::where('username' , $input_name)->first(); //入力されたユーザー情報に該当するデータをUserモデルを介して取り出す
-        if (is_null($user)){
-            //$userがNULLの時点で、ユーザーネームが間違っている。
-            return false;
-        }
-        
-        //データベースからユーザーネーム・パスワードを取得
-        $user_name = $user->username;
-        $user_pass = $user->password;
-        
-        //ここも!の後ろの()がないと挙動がおかしい(ここは条件式が複雑だから、いずれにせよ付けた方がいいとは思うけど)
-        if(!('Basic ' . base64_encode($user_name . ':' . $user_pass) == $auth_header)){
-            return false;
-        }
-
-        //認証に何も問題がなければ、true
-        return true;
     }
 
     /**
@@ -53,6 +43,14 @@ class UserRequest extends FormRequest
      */
     public function rules()
     {
+        //ログイン時は送られてくるusenameはデータベースに存在するはずなので、uniqueを外す。
+        if($this->path() == 'api/login'){
+            return [
+                'username' => 'required|regex:/^[a-z0-9_]{1,15}$/i',
+                'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
+            ];
+        }
+        //それ以外の場合(徳録・更新の場合)は、ユニークであるべき。
         return [
             'username' => 'required|unique:users,username|regex:/^[a-z0-9_]{1,15}$/i',
             'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'

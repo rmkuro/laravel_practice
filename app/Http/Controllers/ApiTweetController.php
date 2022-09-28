@@ -8,6 +8,7 @@ use Illuminate\Http\Response;
 use App\Models\Tweet;
 use App\Models\User;
 use App\Http\Controllers\ApiUserController;
+use App\Http\Requests\UserRequest;
 
 class ApiTweetController extends Controller
 {
