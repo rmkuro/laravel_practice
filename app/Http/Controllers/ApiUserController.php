@@ -23,9 +23,8 @@ class ApiUserController extends Controller
         $new_user->name = $input_name;
         $new_user->password = $input['password'];
         $new_user->save();
-
         return response("Created", 201)
-                ->header('Location', "http://localhost/users/{$new_user->id}");
+                ->header('Location', $_ENV['APP_URL'] . "/tweets/{$new_user->id}");
     }
 
     public function showUser(Request $request, $id){

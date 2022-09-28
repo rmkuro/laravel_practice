@@ -43,7 +43,7 @@ class ApiTweetController extends Controller
         $tweet->content = $tweet_content;
         $tweet->save();
         return response("Created", 201)
-                ->header('Location', "http://localhost/tweets/{$tweet->id}");
+                ->header('Location', $_ENV['APP_URL'] . "/tweets/{$tweet->id}");
     }
 
     public function deleteTweet(Request $request, $id){
