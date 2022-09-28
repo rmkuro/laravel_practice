@@ -12,55 +12,47 @@ use App\Http\Requests\UserRequest;
 
 class ApiTweetController extends Controller
 {
+    //認証もバリデーションも必要ないため、普通のRequesクラス
     public function getAllTweets(Request $request){
         $tweets = Tweet::get()->toJson(JSON_PRETTY_PRINT);
         return response($tweets, 200);
     }
 
-    public function createTweet(Request $request){
-        //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
-        $authentication_result = ApiUserController::basicAuthentication($request);
-
-        if($authentication_result instanceof Response){            
-            return $authentication_result;
-        }
-        
-        //分かりやすく、$userという変数に移行
-        $user = $authentication_result;
-
+    public function createTweet(UserRequest $request){
         //ツイートの処理
-        $input_content = json_decode($request->getContent(), true);
-        if(!$input_content){
-            return response("{\"content\": \"ツイート内容\"}の形式にしてください。", 400);
-        }
-        $tweet_content = $input_content["content"];
+        $input = $request->validated();
+        $input_content = $input["content"];
 
-        if(mb_strlen($tweet_content) > 140){
+        //バリデーションの文字数制限がよくわからなかったので、とりあえずここで140文字か検証。
+        if(mb_strlen($input_content) > 140){
             return response("ツイートは140文字以内にしてください。", 400);
         }
 
+        //トークンに該当するユーザーのIDを取得
+        $input_token = $request->header('AccessToken');
+        $user_id = \DB::table('personal_access_tokens')
+                    ->where('token', "$input_token")
+                    ->value('tokenable_id');
+
         $tweet = new Tweet;
-        $tweet->user_id = $user->id;
-        $tweet->content = $tweet_content;
+        $tweet->user_id = $user_id;
+        $tweet->content = $input_content;
         $tweet->save();
         return response("Created", 201)
                 ->header('Location', "http://localhost/tweets/{$tweet->id}");
     }
 
+    //リクエストにボディがないのでバリデーションに引っ掛かってしまうため、引数をRequestクラスにしました。
     public function deleteTweet(Request $request, $id){
-        //認証した後、responseオブジェクトが返ってくる。成功した場合、Userのオブジェクトが、Responseオブジェクトに入っている。
-        $authentication_result = ApiUserController::basicAuthentication($request);
-
-        if($authentication_result instanceof Response){            
-            //return $authentication_result;
-            return $authentication_result;
-        }
-        
-        //分かりやすく、$userという変数に移行
-        $user = $authentication_result;
+        //トークンに該当するユーザーのIDを取得
+        $input_token = $request->header('AccessToken');
+        $user_id = \DB::table('personal_access_tokens')
+                    ->where('token', "$input_token")
+                    ->value('tokenable_id');
 
         $tweet = Tweet::where('id', $id)->first();
-        if($tweet->user_id == $user->id){
+
+        if($tweet->user_id == $user_id){
             $tweet->delete();
             return response("該当のツイートは削除されました。", 200);
         }else{
@@ -68,6 +60,7 @@ class ApiTweetController extends Controller
         }
     }
 
+    //getAllTweets同様、認証$バリデーションが不要
     public function showTweet(Request $request, $id){
         $tweet = Tweet::where('id' , $id)->first();
         if(is_null($tweet)){

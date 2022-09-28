@@ -14,8 +14,12 @@ class ApiUserController extends Controller
         $input = $request->validated();
         $input_name = $input['username'];
         $input_pass = $input['password'];
-        $input_pass = md5($input_pass);
+        $input_pass = md5($input_pass); //入力されたパスワードのハッシュ化
         $user = User::where('username' , $input_name)->first();
+        //$userがnull = 存在しないユーザーネームが入力されている。
+        if(!$user){
+            return response("ログイン失敗です", 401);
+        }
         if($user->password == $input_pass){
             $token = $user->createToken('test');
             return response($token);
@@ -28,7 +32,6 @@ class ApiUserController extends Controller
 
         $input_name = $input['username'];
         $input_pass = $input['password'];
-        $user = User::where('username' , $input_name)->first();
         
         $new_user = new User;
         $new_user->username = $input_name;
@@ -53,6 +56,7 @@ class ApiUserController extends Controller
         $input = $request->validated();
 
         $input_token = $request->header('AccessToken');
+        //送られてきたトークンに該当するユーザーのIDを取得。(フォームリクエストで既に認証されてるのでNULLにはならない。)
         $db_token = \DB::table('personal_access_tokens')
                     ->where('token', "$input_token")
                     ->value('tokenable_id');
@@ -60,7 +64,7 @@ class ApiUserController extends Controller
         $user = User::where('id', $db_token)->first();
 
         $user->username = $input["username"];
-        $user->password = password_hash($input['password'], PASSWORD_DEFAULT);
+        $user->password = md5($input['password']);
         $user->save();
 
         return response(json_encode($user), 200);

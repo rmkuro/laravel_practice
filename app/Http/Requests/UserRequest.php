@@ -49,11 +49,16 @@ class UserRequest extends FormRequest
                 'username' => 'required|regex:/^[a-z0-9_]{1,15}$/i',
                 'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
             ];
+        }elseif($this->path() == 'api/tweets' && $this->isMethod('post')){
+            return [
+                'content' => 'required|max:200'
+            ];
+        }else{
+            //それ以外の場合(徳録・更新の場合)は、ユニークであるべき。
+            return [
+                'username' => 'required|unique:users,username|regex:/^[a-z0-9_]{1,15}$/i',
+                'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
+            ];
         }
-        //それ以外の場合(徳録・更新の場合)は、ユニークであるべき。
-        return [
-            'username' => 'required|unique:users,username|regex:/^[a-z0-9_]{1,15}$/i',
-            'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
-        ];
     }
 }
