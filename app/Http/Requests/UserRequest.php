@@ -27,14 +27,14 @@ class UserRequest extends FormRequest
 
         $input_name = substr($access_token, 0, strpos($access_token, ':')); //ユーザーネームを取得
 
-        $user = User::where('name' , $input_name)->first(); //入力されたユーザー情報に該当するデータをUserモデルを介して取り出す
+        $user = User::where('username' , $input_name)->first(); //入力されたユーザー情報に該当するデータをUserモデルを介して取り出す
         if (is_null($user)){
             //$userがNULLの時点で、ユーザーネームが間違っている。
             return false;
         }
         
         //データベースからユーザーネーム・パスワードを取得
-        $user_name = $user->name;
+        $user_name = $user->username;
         $user_pass = $user->password;
         
         //ここも!の後ろの()がないと挙動がおかしい(ここは条件式が複雑だから、いずれにせよ付けた方がいいとは思うけど)
@@ -54,7 +54,7 @@ class UserRequest extends FormRequest
     public function rules()
     {
         return [
-            'username' => 'required|unique:users,name|regex:/^[a-z0-9_]{1,15}$/i',
+            'username' => 'required|unique:users,username|regex:/^[a-z0-9_]{1,15}$/i',
             'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
         ];
     }
