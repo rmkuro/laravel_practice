@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Models\User;
+use Illuminate\contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UserRequest extends FormRequest
 {
@@ -60,5 +62,14 @@ class UserRequest extends FormRequest
                 'password' => 'required|regex:/^[a-z0-9_]{5,30}$/i'
             ];
         }
+    }
+
+    public function failedValidation(Validator $validator)
+    {
+        $response = response()->json([
+            'status' => 400,
+            'errors' => $validator->errors(),
+        ],400);
+        throw new HttpResponseException($response);
     }
 }
