@@ -47,9 +47,8 @@ class ApiTweetController extends Controller
                     ->value('tokenable_id');
         
         //return response($id); ここで$id=12
-        // $tweet = Tweet::find($id)->first();
+        // $tweet = Tweet::find($id)->first(); この文と下の文の違いがわからない
         $tweet = Tweet::find($id);
-        return response($tweet);
 
         if($tweet->user_id == $user_id){
             $tweet->delete();
