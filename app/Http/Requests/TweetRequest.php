@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Models\Token;
 
 class TweetRequest extends FormRequest
 {
@@ -19,8 +20,7 @@ class TweetRequest extends FormRequest
             $input_token = $this->header('AccessToken');
             $hashed_token = hash('sha256', $input_token);
             //ヘッダに書かれたアクセストークンがあるかどうかの検証
-            $db_token = \DB::table('personal_access_tokens')
-                        ->where('token', $hashed_token)
+            $db_token = Token::where('token', $hashed_token)
                         ->value('token');
             if($db_token){
                 return true;
@@ -40,7 +40,8 @@ class TweetRequest extends FormRequest
     public function rules()
     {
         return [
-            'content' => 'required|max:200'
+            //ツイートの最大文字数を制限
+            'content' => 'required|max:140'
         ];
     }
 

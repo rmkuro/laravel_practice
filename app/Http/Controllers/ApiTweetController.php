@@ -7,6 +7,7 @@ use Illuminate\Http\Response;
 
 use App\Models\Tweet;
 use App\Models\User;
+use App\Models\Token;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\LoginRequest;
@@ -23,16 +24,10 @@ class ApiTweetController extends Controller
     public function createTweet(TweetRequest $request){
         $content = $request->content;
 
-        //バリデーションの文字数制限がよくわからなかったので、とりあえずここで140文字か検証。
-        if(mb_strlen($content) > 140){
-            return response("ツイートは140文字以内にしてください。", 400);
-        }
-
         //トークンに該当するユーザーのIDを取得
         $input_token = $request->header('AccessToken');
         $hashed_token = hash('sha256', $input_token);
-        $user_id = \DB::table('personal_access_tokens')
-                    ->where('token', $hashed_token)
+        $user_id = Token::where('token', $hashed_token)
                     ->value('tokenable_id');
 
         $tweet = new Tweet;
@@ -47,11 +42,14 @@ class ApiTweetController extends Controller
     public function deleteTweet(Request $request, $id){
         //トークンに該当するユーザーのIDを取得
         $input_token = $request->header('AccessToken');
-        $user_id = \DB::table('personal_access_tokens')
-                    ->where('token', "$input_token")
+        $hashed_token = hash('sha256', $input_token);
+        $user_id = Token::where('token', $hashed_token)
                     ->value('tokenable_id');
-
-        $tweet = Tweet::find($id)->first();
+        
+        //return response($id); ここで$id=12
+        // $tweet = Tweet::find($id)->first();
+        $tweet = Tweet::find($id);
+        return response($tweet);
 
         if($tweet->user_id == $user_id){
             $tweet->delete();
@@ -63,7 +61,7 @@ class ApiTweetController extends Controller
 
     //getAllTweets同様、認証$バリデーションが不要
     public function showTweet(Request $request, $id){
-        $tweet = Tweet::where('id' , $id)->first();
+        $tweet = Tweet::find($id)->first();
         if(is_null($tweet)){
             return response("Tweetが見つかりません", 404);
         }

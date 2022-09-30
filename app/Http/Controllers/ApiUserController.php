@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\Tweet;
 use App\Models\User;
+use App\Models\Token;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\LoginRequest;
@@ -57,8 +58,7 @@ class ApiUserController extends Controller
         $input_token = $request->header('AccessToken');
         $hashed_token = hash('sha256', $input_token);
         //送られてきたトークンに該当するユーザーのIDを取得。(フォームリクエストで既に認証されてるのでNULLにはならない。)
-        $db_token = \DB::table('personal_access_tokens')
-                    ->where('token', $hashed_token)
+        $db_token = Token::where('token', $hashed_token)
                     ->value('tokenable_id');
 
         $user = User::where('id', $db_token)->first();

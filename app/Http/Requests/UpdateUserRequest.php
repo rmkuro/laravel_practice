@@ -3,9 +3,10 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\User;
 use Illuminate\contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Models\User;
+use App\Models\Token;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -20,8 +21,7 @@ class UpdateUserRequest extends FormRequest
             $input_token = $this->header('AccessToken');
             $hashed_token = hash('sha256', $input_token);
             //ヘッダに書かれたアクセストークンがあるかどうかの検証
-            $db_token = \DB::table('personal_access_tokens')
-                        ->where('token', $hashed_token)
+            $db_token = Token::where('token', $hashed_token)
                         ->value('token');
             if($db_token){
                 return true;
