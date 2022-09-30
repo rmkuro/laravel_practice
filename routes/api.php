@@ -24,11 +24,7 @@ Route::post('login', [ApiUserController::class, 'login']);
 Route::post('users', [ApiUserController::class, 'createUser']);
 Route::get('users/{id}', [ApiUserController::class, 'showUser']);
 Route::put('users/me', [ApiUserController::class, 'updateUser']);
-Route::get('tweets', [ApiTweetController::class, 'getAllTweets']);
+Route::get('tweets', [ApiTweetController::class, 'getAll']);
 Route::post('tweets',[ApiTweetController::class, 'createTweet']);
 Route::delete('tweets/{id}',[ApiTweetController::class, 'deleteTweet']);
 Route::get('tweets/{id}',[ApiTweetController::class, 'showTweet']);
-
-//開発用に1次的に使用
-//Route::post('test/input', [ApiController::class, 'check_input']);
-//Route::get('test/auth', [ApiController::class, 'basicAuthentication']);

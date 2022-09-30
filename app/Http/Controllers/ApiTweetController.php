@@ -7,36 +7,37 @@ use Illuminate\Http\Response;
 
 use App\Models\Tweet;
 use App\Models\User;
-use App\Http\Controllers\ApiUserController;
-use App\Http\Requests\UserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\CreateUserRequest;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\TweetRequest;
 
 class ApiTweetController extends Controller
 {
     //認証もバリデーションも必要ないため、普通のRequesクラス
-    public function getAllTweets(Request $request){
+    public function getAll(Request $request){
         $tweets = Tweet::get()->toJson(JSON_PRETTY_PRINT);
         return response($tweets, 200);
     }
 
-    public function createTweet(UserRequest $request){
-        //ツイートの処理
-        $input = $request->validated();
-        $input_content = $input["content"];
+    public function createTweet(TweetRequest $request){
+        $content = $request->content;
 
         //バリデーションの文字数制限がよくわからなかったので、とりあえずここで140文字か検証。
-        if(mb_strlen($input_content) > 140){
+        if(mb_strlen($content) > 140){
             return response("ツイートは140文字以内にしてください。", 400);
         }
 
         //トークンに該当するユーザーのIDを取得
         $input_token = $request->header('AccessToken');
+        $hashed_token = hash('sha256', $input_token);
         $user_id = \DB::table('personal_access_tokens')
-                    ->where('token', "$input_token")
+                    ->where('token', $hashed_token)
                     ->value('tokenable_id');
 
         $tweet = new Tweet;
         $tweet->user_id = $user_id;
-        $tweet->content = $input_content;
+        $tweet->content = $content;
         $tweet->save();
         return response("Created", 201)
                 ->header('Location', $_ENV['APP_URL'] . "/tweets/{$tweet->id}");
@@ -50,7 +51,7 @@ class ApiTweetController extends Controller
                     ->where('token', "$input_token")
                     ->value('tokenable_id');
 
-        $tweet = Tweet::where('id', $id)->first();
+        $tweet = Tweet::find($id)->first();
 
         if($tweet->user_id == $user_id){
             $tweet->delete();

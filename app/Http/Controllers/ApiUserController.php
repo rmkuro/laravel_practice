@@ -6,14 +6,16 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\Tweet;
 use App\Models\User;
-use App\Http\Requests\UserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\CreateUserRequest;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\TweetRequest;
 
 class ApiUserController extends Controller
 {
-    public function login(UserRequest $request){
-        $input = $request->validated();
-        $input_name = $input['username'];
-        $input_pass = $input['password'];
+    public function login(LoginRequest $request){
+        $input_name = $request->username;
+        $input_pass = $request->password;
         $input_pass = md5($input_pass); //入力されたパスワードのハッシュ化
         $user = User::where('username' , $input_name)->first();
         //$userがnull = 存在しないユーザーネームが入力されている。
@@ -27,11 +29,9 @@ class ApiUserController extends Controller
         return response("ログイン失敗です", 401);
     }
 
-    public function createUser(UserRequest $request){
-        $input = $request->validated();
-
-        $input_name = $input['username'];
-        $input_pass = $input['password'];
+    public function createUser(CreateUserRequest $request){
+        $input_name = $request->username;
+        $input_pass = $request->password;
         
         $new_user = new User;
         $new_user->username = $input_name;
@@ -43,7 +43,7 @@ class ApiUserController extends Controller
     }
 
     public function showUser(Request $request, $id){
-        $user = User::where('id' , $id)->first();
+        $user = User::find($id)->first();
         if(is_null($user)){
             return response("該当するユーザーが見つかりません", 404);
         }
@@ -51,19 +51,20 @@ class ApiUserController extends Controller
         return response($user, 200);
     }
 
-    public function updateUser(UserRequest $request){
+    public function updateUser(UpdateUserRequest $request){
         $input = $request->validated();
 
         $input_token = $request->header('AccessToken');
+        $hashed_token = hash('sha256', $input_token);
         //送られてきたトークンに該当するユーザーのIDを取得。(フォームリクエストで既に認証されてるのでNULLにはならない。)
         $db_token = \DB::table('personal_access_tokens')
-                    ->where('token', "$input_token")
+                    ->where('token', $hashed_token)
                     ->value('tokenable_id');
 
         $user = User::where('id', $db_token)->first();
 
-        $user->username = $input["username"];
-        $user->password = md5($input['password']);
+        $user->username = $request->username;
+        $user->password = md5($request->password);
         $user->save();
 
         return response(json_encode($user), 200);
