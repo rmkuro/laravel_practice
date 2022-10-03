@@ -17,13 +17,13 @@ class ApiUserController extends Controller
     public function login(LoginRequest $request){
         $input_name = $request->username;
         $input_pass = $request->password;
-        $input_pass = md5($input_pass); //入力されたパスワードのハッシュ化
         $user = User::where('username' , $input_name)->first();
         //$userがnull = 存在しないユーザーネームが入力されている。
         if(!$user){
             return response("ログイン失敗です", 401);
         }
-        if($user->password == $input_pass){
+        $hashed_password = $user->password;
+        if(password_verify($input_pass, $hashed_password)){
             $token = $user->createToken('test');
             return response($token);
         }
@@ -37,7 +37,7 @@ class ApiUserController extends Controller
         $new_user = new User;
         $new_user->username = $input_name;
 
-        $new_user->password = md5($input_pass); 
+        $new_user->password = password_hash($input_pass, PASSWORD_DEFAULT); 
         $new_user->save();
         return response("Created", 201)
                 ->header('Location', $_ENV['APP_URL'] . "/tweets/{$new_user->id}");
@@ -58,15 +58,25 @@ class ApiUserController extends Controller
         $input_token = $request->header('AccessToken');
         $hashed_token = hash('sha256', $input_token);
         //送られてきたトークンに該当するユーザーのIDを取得。(フォームリクエストで既に認証されてるのでNULLにはならない。)
-        $db_token = Token::where('token', $hashed_token)
+        $user_id = Token::where('token', $hashed_token)
                     ->value('tokenable_id');
 
-        $user = User::where('id', $db_token)->first();
+        $user = User::find($user_id);
 
         $user->username = $request->username;
-        $user->password = md5($request->password);
+        $user->password = password_hash($request->password, PASSWORD_DEFAULT);
         $user->save();
 
         return response(json_encode($user), 200);
     }
+
+    // public function aiueo(Request $request){
+    //     $input = $request['password'];
+
+    //     $hashed_password = password_hash($input, PASSWORD_DEFAULT);
+
+    //     if(password_verify($input, $hashed_password)){
+    //         return response("パスワードは正しい");
+    //     }
+    // }
 }

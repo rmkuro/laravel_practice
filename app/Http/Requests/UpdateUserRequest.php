@@ -54,4 +54,12 @@ class UpdateUserRequest extends FormRequest
         ],400);
         throw new HttpResponseException($response);
     }
+
+    public function messages(){
+        return [
+            'username.required' => '名前は必ず入力してください',
+            'username.unique:users,username' => '既にユーザーネームは使われてます',
+            'username.regex:/^[a-z0-9_]{1,15}$/i' => 'a~z,アンダーバーの15文字以内で入力してください' 
+        ];
+    }
 }

@@ -40,4 +40,12 @@ class CreateUserRequest extends FormRequest
         ],400);
         throw new HttpResponseException($response);
     }
+
+    public function messages(){
+        return [
+            'username.required' => 'aiueo',
+            'username.unique:users,username' => 'aiueo1',
+            'username.regex:/^[a-z0-9_]{1,15}$/i' => 'aiueo2',
+        ];
+    }
 }
