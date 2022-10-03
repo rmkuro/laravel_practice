@@ -28,5 +28,3 @@ Route::get('tweets', [ApiTweetController::class, 'getAll']);
 Route::post('tweets',[ApiTweetController::class, 'createTweet']);
 Route::delete('tweets/{id}',[ApiTweetController::class, 'deleteTweet']);
 Route::get('tweets/{id}',[ApiTweetController::class, 'showTweet']);
-
-Route::post('aiueo', [ApiUserController::class, 'aiueo']);

@@ -69,14 +69,4 @@ class ApiUserController extends Controller
 
         return response(json_encode($user), 200);
     }
-
-    // public function aiueo(Request $request){
-    //     $input = $request['password'];
-
-    //     $hashed_password = password_hash($input, PASSWORD_DEFAULT);
-
-    //     if(password_verify($input, $hashed_password)){
-    //         return response("パスワードは正しい");
-    //     }
-    // }
 }
