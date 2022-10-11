@@ -22,9 +22,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('login', [ApiUserController::class, 'login']);
 Route::post('users', [ApiUserController::class, 'createUser']);
-Route::get('users/{id}', [ApiUserController::class, 'showUser']);
+Route::get('users/{user}', [ApiUserController::class, 'showUser']);
 Route::put('users/me', [ApiUserController::class, 'updateUser']);
 Route::get('tweets', [ApiTweetController::class, 'getAll']);
 Route::post('tweets',[ApiTweetController::class, 'createTweet']);
 Route::delete('tweets/{id}',[ApiTweetController::class, 'deleteTweet']);
-Route::get('tweets/{id}',[ApiTweetController::class, 'showTweet']);
+Route::get('tweets/{tweet}',[ApiTweetController::class, 'showTweet']);

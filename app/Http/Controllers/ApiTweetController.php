@@ -18,7 +18,11 @@ class ApiTweetController extends Controller
     //認証もバリデーションも必要ないため、普通のRequesクラス
     public function getAll(Request $request){
         $tweets = Tweet::get()->toJson(JSON_PRETTY_PRINT);
-        return response($tweets, 200);
+        //return response($tweets, 200);
+        app()->bind('myName', function(){
+            return 'John Doe';
+        });
+        return response(var_dump(app()));
     }
 
     public function createTweet(TweetRequest $request){
@@ -59,11 +63,7 @@ class ApiTweetController extends Controller
     }
 
     //getAllTweets同様、認証$バリデーションが不要
-    public function showTweet(Request $request, $id){
-        $tweet = Tweet::find($id)->first();
-        if(is_null($tweet)){
-            return response("Tweetが見つかりません", 404);
-        }
+    public function showTweet(Tweet $tweet){
         $tweet = json_decode($tweet, true);
         return response($tweet, 200);
     }

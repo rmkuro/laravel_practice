@@ -9,4 +9,8 @@ class Tweet extends Model
 {
     use HasFactory;
     protected $tweet = 'tweets';
+
+    public function users(){
+        return $this->hasOne(User::class);
+    }
 }

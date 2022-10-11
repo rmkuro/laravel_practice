@@ -43,11 +43,7 @@ class ApiUserController extends Controller
                 ->header('Location', $_ENV['APP_URL'] . "/tweets/{$new_user->id}");
     }
 
-    public function showUser(Request $request, $id){
-        $user = User::find($id)->first();
-        if(is_null($user)){
-            return response("該当するユーザーが見つかりません", 404);
-        }
+    public function showUser(User $user){
         $user = json_decode($user, true);
         return response($user, 200);
     }
