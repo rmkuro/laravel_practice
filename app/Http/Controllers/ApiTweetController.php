@@ -12,6 +12,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\CreateUserRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\TweetRequest;
+use App\Http\Resources\TweetResource;
 
 class ApiTweetController extends Controller
 {
@@ -60,7 +61,6 @@ class ApiTweetController extends Controller
 
     //getAllTweets同様、認証$バリデーションが不要
     public function showTweet(Tweet $tweet){
-        $tweet = json_decode($tweet, true);
-        return response($tweet, 200);
+        return new TweetResource($tweet);
     }
 }
