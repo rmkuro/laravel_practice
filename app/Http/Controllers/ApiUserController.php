@@ -48,6 +48,11 @@ class ApiUserController extends Controller
         return response($user, 200);
     }
 
+    public function getSpecificUserTweet(User $user){
+        $tweets = $user->tweets;
+        return response($tweets);
+    }
+
     public function updateUser(UpdateUserRequest $request){
         $input = $request->validated();
 

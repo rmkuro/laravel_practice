@@ -10,4 +10,8 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Model
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    public function tweets(){
+        return $this->hasMany(Tweet::class);
+    }
 }

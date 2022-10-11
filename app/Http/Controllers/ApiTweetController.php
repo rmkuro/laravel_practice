@@ -18,11 +18,7 @@ class ApiTweetController extends Controller
     //認証もバリデーションも必要ないため、普通のRequesクラス
     public function getAll(Request $request){
         $tweets = Tweet::get()->toJson(JSON_PRETTY_PRINT);
-        //return response($tweets, 200);
-        app()->bind('myName', function(){
-            return 'John Doe';
-        });
-        return response(var_dump(app()));
+        return response($tweets, 200);
     }
 
     public function createTweet(TweetRequest $request){
