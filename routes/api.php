@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ApiUserController;
+use App\Http\Controllers\ApiTweetController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,11 +20,12 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('users', 'ApiController@getAllUsers');
-Route::post('users/login', 'ApiController@LoginUser');
-Route::get('users/{id}', 'ApiController@showUser');
-Route::post('users/{id}', 'ApiController@updateUser');
-Route::get('tweets','ApiController@getAllTweets');
-Route::post('tweets','ApiController@createTweet');
-Route::delete('tweets/{id}','ApiController@deleteTweet');
-Route::get('tweets/{id}','ApiController@showTweet');
+Route::post('login', [ApiUserController::class, 'login']);
+Route::post('users', [ApiUserController::class, 'createUser']);
+Route::get('users/{user}', [ApiUserController::class, 'showUser']);
+Route::get('users/{user}/tweets', [ApiUserController::class, 'getSpecificUserTweet']);
+Route::put('users/me', [ApiUserController::class, 'updateUser']);
+Route::get('tweets', [ApiTweetController::class, 'getAll']);
+Route::post('tweets',[ApiTweetController::class, 'createTweet']);
+Route::delete('tweets/{id}',[ApiTweetController::class, 'deleteTweet']);
+Route::get('tweets/{tweet}',[ApiTweetController::class, 'showTweet']);
